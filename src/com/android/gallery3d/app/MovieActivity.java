@@ -141,9 +141,11 @@ public class MovieActivity extends AbstractPermissionActivity {
                         || audioManager.isBluetoothA2dpOn();
             } else if (action.equals(BluetoothDevice.ACTION_ACL_CONNECTED)
                     || action.equals(BluetoothDevice.ACTION_ACL_DISCONNECTED)) {
-                final int deviceClass = ((BluetoothDevice)
+                final BluetoothClass bc =  ((BluetoothDevice)
                         intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE))
-                        .getBluetoothClass().getDeviceClass();
+                        .getBluetoothClass();
+                if (bc == null) return;
+                final int deviceClass = bc.getDeviceClass();
                 if ((deviceClass == BluetoothClass.Device.AUDIO_VIDEO_HEADPHONES)
                         || (deviceClass == BluetoothClass.Device.AUDIO_VIDEO_WEARABLE_HEADSET)) {
                     mIsHeadsetOn = action.equals(BluetoothDevice.ACTION_ACL_CONNECTED)
@@ -192,7 +194,7 @@ public class MovieActivity extends AbstractPermissionActivity {
         if (isPermissionGranted()) {
             init(intent, rootView, savedInstanceState);
         }
-
+        registerScreenReceiver();
         // DRM validation
 //        Uri original = intent.getData();
 //        String mimeType = intent.getType();
@@ -581,7 +583,6 @@ public class MovieActivity extends AbstractPermissionActivity {
         mPlayer.requestAudioFocus();
         super.onStart();
         mMovieHooker.onStart();
-        registerScreenReceiver();
     }
 
     @Override
@@ -597,7 +598,6 @@ public class MovieActivity extends AbstractPermissionActivity {
             mControlResumed = false;
         }
         mMovieHooker.onStop();
-        unregisterScreenReceiver();
     }
 
     @Override
@@ -684,6 +684,7 @@ public class MovieActivity extends AbstractPermissionActivity {
         mPlayer.onDestroy();
         super.onDestroy();
         mMovieHooker.onDestroy();
+        unregisterScreenReceiver();
     }
 
     @Override
